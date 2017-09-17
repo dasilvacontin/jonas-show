@@ -1,0 +1,67 @@
+<html>
+<head>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+<script>
+    const socket = io ('http://localhost:3000')
+    socket.on('ex event', function (obj) {
+        console.log('getting ex event')
+        console.log(obj)
+        console.log(arguments)
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 300
+    const ctx = canvas.getContext('2d')
+    document.body.appendChild(canvas)
+
+    let mat = [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+    ]
+    
+    socket.on('move-made', function (newMat) {
+        mat = newMat
+        render()
+    })
+
+    function render () {
+        for (let x = 0; x < 3; ++x) {
+            for (let y = 0; y < 3; ++y) {
+                ctx.strokeStyle = 'black'
+                ctx.strokeRect(x * 100, y * 100, 100, 100)
+                let cellValue = mat[x][y]
+                if (cellValue === 1) {
+                    ctx.strokeStyle = 'blue'
+                    ctx.beginPath()
+                    ctx.arc(x * 100 + 50, y * 100 + 50, 40, 0, 2 * Math.PI)
+                    ctx.stroke()
+                } else if (cellValue === 2) {
+                    ctx.strokeStyle = 'red'
+                    ctx.strokeRect(x*100 + 10, y*100 + 10, 80, 80)
+                }
+            }
+        }
+    }
+    render()
+
+    document.addEventListener('mousedown', function (ev) {
+        const cellX = Math.floor(ev.clientX / 100)
+        const cellY = Math.floor(ev.clientY / 100)
+        console.log(cellX, cellY)
+        socket.emit('move', cellX, cellY)
+    })
+</script>
+</body>
+</html>
